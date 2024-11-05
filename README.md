@@ -1,45 +1,95 @@
 ## Project Setup and Data Import
 
-### Step 1: Import the SBA CSV as a DataFrame
+This project requires importing data from two main CSV files: `SBA.csv` and `GL.csv`. These files contain essential fields for client and general ledger data processing. Below are the steps to import these CSV files into the project, including column renaming to ensure a consistent format.
 
-This project requires loading an SBA CSV file that contains essential fields for client data processing. The CSV should include the following columns:
+### Step 1: Importing the SBA CSV
 
-- `JOBID`: Unique identifier for each job
-- `CLNTNAME`: Name of the client
-- `CLNTKEY`: Unique client key
-- `CLACCOUNTID`: Client account ID
+The SBA CSV file contains essential fields for client data processing:
 
-To import this CSV into the project, follow these steps:
+- **Fields**:
+  - `JOBID`: Unique identifier for each job
+  - `CLNTNAME`: Client name
+  - `CLNTKEY`: Unique client key
+  - `CLACCOUNTID`: Client account ID
 
 1. Ensure the CSV file is accessible within the working directory or specify its path.
-2. Import the CSV as a DataFrame using `pandas`.
+2. Use the `import_sba_csv` function to load the SBA CSV as a DataFrame, returning a structured data frame of client data.
 
-### Step 2: Import the GL CSV as a DataFrame
+```python
+import pandas as pd
 
-In addition to the SBA CSV, this project requires importing a GL CSV file that contains extensive details. The key focus will be on the `DESC` fields, which include data strings that may align in full or partially with information from the SBA CSV file.
+def import_sba_csv(file_path):
+    return pd.read_csv(file_path)
+```
 
-#### GL CSV Fields
+### Step 2: Importing the GL CSV
 
-The GL CSV contains the following fields (some of which will be central to data processing):
+The GL CSV file contains detailed general ledger information. The `DESC` fields are especially relevant, as they may contain strings that match or partially match with data from the SBA CSV.
 
-- `GL ACCOUNT NBR`: General Ledger Account Number
-- `GL AU NBR`: General Ledger Authorization Number
-- `ENTERED AMOUNT DR/(CR)`: Debit or Credit amount
-- `DR/CR CODE`: Debit/Credit indicator
-- `EFFECTIVE DATE`: Date of transaction effectiveness
-- `ENT DATE`: Entry date
-- `DESC 1`, `DESC 2`, `DESC 3`, `DESC 4`, `DESC 7`: Description fields (important for matching to SBA data)
-- `EXTERNAL REFERENCE`: External reference ID
-- `ORACLE GL CATEGORY NAME`: Category name from Oracle GL
-- `OUTPUT CYCLE`, `OUTPUT RUN ID`: Cycle and run identifiers
-- `EAGLE BATCH ID`, `JOURNAL ID NBR`, `JOURNAL LINE NBR`: IDs associated with journal and batch entries
-- `PK`: Primary key
-- `GL_NBR`: General Ledger number
-- `7Y_FLG`: 7-Year flag indicator
+- **Fields**:
+  - `GL ACCOUNT NBR`: General Ledger Account Number
+  - `GL AU NBR`: General Ledger Authorization Number
+  - `ENTERED AMOUNT DR/(CR)`: Debit or Credit amount
+  - `DR/CR CODE`: Debit/Credit indicator
+  - `EFFECTIVE DATE`: Date of transaction effectiveness
+  - `ENT DATE`: Entry date
+  - `DESC 1`, `DESC 2`, `DESC 3`, `DESC 4`, `DESC 7`: Description fields (used for matching to SBA data)
+  - `EXTERNAL REFERENCE`: External reference ID
+  - `ORACLE GL CATEGORY NAME`: Oracle GL category name
+  - `OUTPUT CYCLE`, `OUTPUT RUN ID`: Output cycle and run identifiers
+  - `EAGLE BATCH ID`, `JOURNAL ID NBR`, `JOURNAL LINE NBR`: Journal and batch identifiers
+  - `PK`: Primary key
+  - `GL_NBR`: General Ledger number
+  - `7Y_FLG`: 7-Year flag indicator
 
-#### Importing the GL CSV
+To load this CSV:
 
-To import this GL CSV file, follow the steps below:
+1. Place the GL CSV file in the working directory or specify its path.
+2. Use the `import_gl_csv` function to load the GL CSV as a DataFrame, enabling further analysis.
 
-1. Make sure the GL CSV file is accessible in your working directory or specify the appropriate path.
-2. Load the file as a DataFrame in `pandas`, enabling further analysis, particularly for the `DESC` fields that will match with the SBA data.
+```python
+def import_gl_csv(file_path):
+    return pd.read_csv(file_path)
+```
+
+### Step 3: Standardizing Column Names
+
+The project standardizes column names to follow a consistent naming convention: lowercase letters with underscores instead of spaces, removing non-alphanumeric characters (except underscores). This ensures easier handling and alignment across all datasets.
+
+**Column Renaming Function**
+
+```python
+def rename_columns(dataframe):
+    dataframe.columns = (
+        dataframe.columns
+        .str.lower()
+        .str.replace(" ", "_")
+        .str.replace(r'[^a-zA-Z0-9_]', "", regex=True)
+        .str.replace(r'__+', '_', regex=True)
+    )
+    return dataframe
+```
+
+### Example Usage
+
+Use the following code to specify paths, import the CSV files, and verify the data:
+
+```python
+def main():
+    sba_csv_path = "path/to/sba.csv"
+    gl_csv_path = "path/to/gl.csv"
+
+    sba_df = rename_columns(import_sba_csv(sba_csv_path))
+    gl_df = rename_columns(import_gl_csv(gl_csv_path))
+
+    print("SBA DataFrame:")
+    print(sba_df.head())
+
+    print("\nGL DataFrame:")
+    print(gl_df.head())
+
+if __name__ == "__main__":
+    main()
+```
+
+By following these steps, you’ll have a structured import process for both the SBA and GL datasets, ready for subsequent matching and analysis.
