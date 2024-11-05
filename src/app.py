@@ -1,6 +1,5 @@
 import pandas as pd
 
-
 def import_sba_csv(file_path):
     """
     Imports the SBA CSV file as a pandas DataFrame.
@@ -12,7 +11,6 @@ def import_sba_csv(file_path):
         pd.DataFrame: DataFrame containing the SBA data.
     """
     return pd.read_csv(file_path)
-
 
 def import_gl_csv(file_path):
     """
@@ -26,6 +24,26 @@ def import_gl_csv(file_path):
     """
     return pd.read_csv(file_path)
 
+def rename_columns(dataframe):
+    """
+    Renames the columns of a DataFrame to follow a consistent naming convention:
+    lowercase letters with underscores instead of spaces, and removal of any
+    non-alphanumeric characters, except for underscores.
+
+    Args:
+        dataframe (pd.DataFrame): The DataFrame for which columns need renaming.
+
+    Returns:
+        pd.DataFrame: The DataFrame with renamed columns.
+    """
+    dataframe.columns = (
+        dataframe.columns
+        .str.lower()
+        .str.replace(" ", "_")
+        .str.replace(r'[^a-zA-Z0-9_]', "", regex=True)
+        .str.replace(r'__+', '_', regex=True)
+    )
+    return dataframe
 
 def main():
     """
@@ -46,7 +64,6 @@ def main():
 
     print("\nGL DataFrame:")
     print(gl_df.head())
-
 
 if __name__ == "__main__":
     main()
