@@ -9,7 +9,8 @@
 			"extensions": [
 				"ms-python.python",
 				"ms-azuretools.vscode-docker",
-				"GitHub.copilot-chat"
+				"GitHub.copilot-chat",
+				"mechatroner.rainbow-csv"
 			]
 		}
 	}
