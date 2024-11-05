@@ -41,3 +41,7 @@ Simply execute `src/app.py` to:
 3. Print a preview of the data, including the shape and first few rows of each DataFrame.
 
 This setup allows for flexible updates and easy testing of the data import process. For further analysis, the imported DataFrames can be used to perform matching, filtering, and other data processing tasks.
+
+Note: For compatibility with Splink, each DataFrame now includes a unique_id column as a primary key, generated automatically during the import process.
+
+This setup will ensure that each DataFrame has a unique_id field for linking in Splink. Let me know if you’d like further assistance with setting up the Splink comparison.

@@ -1,7 +1,8 @@
-import pandas as pd
-from pathlib import Path
-from typing import Union, Optional
 import logging
+from pathlib import Path
+from typing import Optional, Union
+
+import pandas as pd
 
 # Set up logging
 logging.basicConfig(
@@ -54,6 +55,8 @@ class CSVImporter:
             if standardize_columns:
                 df = self._standardize_column_names(df)
 
+            df["unique_id"] = range(1, len(df) + 1)
+
             logger.info(f"Successfully imported {len(df)} rows from {file_path}")
             return df
 
@@ -97,8 +100,8 @@ def main():
         importer = CSVImporter()
 
         # Example file paths - replace with actual paths
-        sba_path = "path/to/sba.csv"
-        gl_path = "path/to/gl.csv"
+        sba_path = "data/sba.csv"
+        gl_path = "data/gl.csv"
 
         # Import CSV files
         sba_df = importer.import_csv(sba_path)
