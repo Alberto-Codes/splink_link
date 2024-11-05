@@ -4,7 +4,7 @@
 
 This project requires importing and processing data from two main CSV files: `SBA.csv` and `GL.csv`. We use a custom `CSVImporter` class to handle CSV imports with error handling and column standardization. The importer ensures that all columns are converted to lowercase, spaces are replaced with underscores, non-alphanumeric characters are removed, and multiple underscores are collapsed to a single underscore for consistency across datasets.
 
-The main code is located in `src/app.py`, which demonstrates the usage of the `CSVImporter` class to load both CSV files and standardize column names.
+The main code is located in `src/app.py`, which demonstrates the usage of the `CSVImporter` class to load both CSV files, standardize column names, and generate hybrid fields for comparisons.
 
 ## Synthetic Sample Data
 
@@ -16,32 +16,49 @@ To assist with testing and verification, the project includes synthetic sample d
   - `CLNTKEY`: Unique client key
   - `CLACCOUNTID`: Client account ID
 
-- **`data/gl.csv`**: Contains sample data with general ledger details. Special attention should be given to the `DESC` fields, which may contain text that partially or fully matches entries in `SBA.csv`. Key fields include:
+- **`data/gl.csv`**: Contains sample data with general ledger details. Special attention is given to the `DESC` fields, which may contain text that partially or fully matches entries in `SBA.csv`. Key fields include:
   - `GL ACCOUNT NBR`: General Ledger Account Number
   - `GL AU NBR`: General Ledger Authorization Number
   - `ENTERED AMOUNT DR/(CR)`: Debit or Credit amount
   - `DR/CR CODE`: Debit/Credit indicator
   - `DESC 1`, `DESC 2`, `DESC 3`, `DESC 4`, `DESC 7`: Description fields for matching with SBA data
-  - Other fields, such as `EXTERNAL REFERENCE`, `ORACLE GL CATEGORY NAME`, and `OUTPUT CYCLE`
+  - Additional fields, such as `EXTERNAL REFERENCE`, `ORACLE GL CATEGORY NAME`, and `OUTPUT CYCLE`
 
 ## Usage
 
-### Importing Data
+### Importing Data and Creating Hybrid Fields
 
-The `CSVImporter` class is used to import both `SBA.csv` and `GL.csv` files. When importing, the class automatically standardizes column names. Error handling ensures that file paths are validated and logs provide informative output for each import operation. 
+The `CSVImporter` class is used to import both `SBA.csv` and `GL.csv` files. When importing, the class automatically standardizes column names. Additionally, each DataFrame is assigned a `unique_id` column, which is required for compatibility with Splink, a record linkage tool used in this project.
 
-### Running the Import Process
+After importing, hybrid fields are generated to facilitate comparisons between SBA and GL records. Hybrid fields are combinations of SBA and GL columns in a format that allows Splink to compare possible matches across multiple fields.
 
-The main entry point for data import and validation is `src/app.py`. This script initializes the `CSVImporter` and imports the `SBA.csv` and `GL.csv` files located in the `data` directory.
+### Hybrid Fields Creation
 
-Simply execute `src/app.py` to:
+For comparison, the project generates hybrid fields by pairing each specified field in the SBA dataset (e.g., `clntname`, `clntkey`, `claccountid`) with each `DESC` field in the GL dataset. For example:
+- `clntname-desc_1` in the SBA dataset will contain `clntname`, and in the GL dataset, it will contain data from `desc_1`.
+- These combinations extend to each SBA field paired with every `DESC` field in GL, such as `clntkey-desc_2`, `claccountid-desc_3`, etc.
 
-1. Import `SBA.csv` and `GL.csv`.
-2. Standardize all column names in each DataFrame.
-3. Print a preview of the data, including the shape and first few rows of each DataFrame.
+These hybrid fields allow Splink to detect potential matches across various descriptive fields even when exact matches might not occur directly in the original columns.
 
-This setup allows for flexible updates and easy testing of the data import process. For further analysis, the imported DataFrames can be used to perform matching, filtering, and other data processing tasks.
+### Running the Import and Comparison Process
 
-Note: For compatibility with Splink, each DataFrame now includes a unique_id column as a primary key, generated automatically during the import process.
+The main entry point for data import and hybrid field generation is `src/app.py`. This script performs the following:
 
-This setup will ensure that each DataFrame has a unique_id field for linking in Splink. Let me know if you’d like further assistance with setting up the Splink comparison.
+1. Imports `SBA.csv` and `GL.csv` as DataFrames.
+2. Standardizes column names in each DataFrame.
+3. Adds a `unique_id` column for each DataFrame, which is required for Splink compatibility.
+4. Generates comparison DataFrames with hybrid fields, preparing the data for linkage analysis.
+
+To run the import and hybrid field generation process:
+
+1. Update the paths in `src/app.py` to point to your `SBA.csv` and `GL.csv` files in the `data` directory.
+2. Execute `src/app.py` to print previews of the imported DataFrames with `unique_id` and hybrid comparison fields.
+
+**Example Command:**
+```bash
+python src/app.py
+```
+
+---
+
+This setup provides a comprehensive foundation for importing, standardizing, and generating comparison-ready DataFrames for further analysis with Splink. For additional details on linking records with Splink, consult the [Splink documentation](https://moj-analytical-services.github.io/splink/).
