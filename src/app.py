@@ -1,69 +1,121 @@
 import pandas as pd
+from pathlib import Path
+from typing import Union, Optional
+import logging
 
-def import_sba_csv(file_path):
-    """
-    Imports the SBA CSV file as a pandas DataFrame.
+# Set up logging
+logging.basicConfig(
+    level=logging.INFO, format="%(asctime)s - %(levelname)s - %(message)s"
+)
+logger = logging.getLogger(__name__)
 
-    Args:
-        file_path (str): Path to the SBA CSV file.
 
-    Returns:
-        pd.DataFrame: DataFrame containing the SBA data.
-    """
-    return pd.read_csv(file_path)
+class CSVImporter:
+    """A class to handle CSV file imports and column standardization."""
 
-def import_gl_csv(file_path):
-    """
-    Imports the GL CSV file as a pandas DataFrame.
+    def __init__(self, encoding: str = "utf-8"):
+        """
+        Initializes the CSVImporter.
 
-    Args:
-        file_path (str): Path to the GL CSV file.
+        Args:
+            encoding (str): Character encoding to use when reading files.
+                Defaults to 'utf-8'.
+        """
+        self.encoding = encoding
 
-    Returns:
-        pd.DataFrame: DataFrame containing the GL data.
-    """
-    return pd.read_csv(file_path)
+    def import_csv(
+        self, file_path: Union[str, Path], standardize_columns: bool = True, **kwargs
+    ) -> Optional[pd.DataFrame]:
+        """
+        Imports a CSV file as a pandas DataFrame with error handling.
 
-def rename_columns(dataframe):
-    """
-    Renames the columns of a DataFrame to follow a consistent naming convention:
-    lowercase letters with underscores instead of spaces, and removal of any
-    non-alphanumeric characters, except for underscores.
+        Args:
+            file_path (Union[str, Path]): Path to the CSV file.
+            standardize_columns (bool): Whether to standardize column names.
+                Defaults to True.
+            **kwargs: Additional arguments to pass to `pd.read_csv`.
 
-    Args:
-        dataframe (pd.DataFrame): The DataFrame for which columns need renaming.
+        Returns:
+            Optional[pd.DataFrame]: DataFrame if successful; None if import fails.
 
-    Returns:
-        pd.DataFrame: The DataFrame with renamed columns.
-    """
-    dataframe.columns = (
-        dataframe.columns
-        .str.lower()
-        .str.replace(" ", "_")
-        .str.replace(r'[^a-zA-Z0-9_]', "", regex=True)
-        .str.replace(r'__+', '_', regex=True)
-    )
-    return dataframe
+        Raises:
+            FileNotFoundError: If the specified file doesn't exist.
+            Exception: For any other error during import.
+        """
+        file_path = Path(file_path)
+
+        try:
+            if not file_path.exists():
+                raise FileNotFoundError(f"File not found: {file_path}")
+
+            logger.info(f"Importing CSV file: {file_path}")
+            df = pd.read_csv(file_path, encoding=self.encoding, **kwargs)
+
+            if standardize_columns:
+                df = self._standardize_column_names(df)
+
+            logger.info(f"Successfully imported {len(df)} rows from {file_path}")
+            return df
+
+        except Exception as e:
+            logger.error(f"Error importing {file_path}: {str(e)}")
+            raise
+
+    @staticmethod
+    def _standardize_column_names(df: pd.DataFrame) -> pd.DataFrame:
+        """
+        Standardizes DataFrame column names to a consistent format.
+
+        Transforms column names to:
+        - Lowercase
+        - Replaces spaces with underscores
+        - Removes non-alphanumeric characters (except underscores)
+        - Collapses multiple underscores
+
+        Args:
+            df (pd.DataFrame): Input DataFrame.
+
+        Returns:
+            pd.DataFrame: DataFrame with standardized column names.
+        """
+        df.columns = (
+            df.columns.str.lower()
+            .str.replace(" ", "_")
+            .str.replace(r"[^a-zA-Z0-9_]", "", regex=True)
+            .str.replace(r"__+", "_", regex=True)
+        )
+        return df
+
 
 def main():
     """
-    Main function that specifies paths to CSV files, imports them, and prints
-    the head of each DataFrame to verify import success.
+    Main function to demonstrate the usage of the CSVImporter class.
+
+    Demonstrates importing and standardizing column names for two example CSV files.
     """
-    # Specify the paths to the CSV files
-    sba_csv_path = "path/to/sba.csv"
-    gl_csv_path = "path/to/gl.csv"
+    try:
+        importer = CSVImporter()
 
-    # Import the CSV files as DataFrames
-    sba_df = import_sba_csv(sba_csv_path)
-    gl_df = import_gl_csv(gl_csv_path)
+        # Example file paths - replace with actual paths
+        sba_path = "path/to/sba.csv"
+        gl_path = "path/to/gl.csv"
 
-    # Print the DataFrames to verify the import
-    print("SBA DataFrame:")
-    print(sba_df.head())
+        # Import CSV files
+        sba_df = importer.import_csv(sba_path)
+        gl_df = importer.import_csv(gl_path)
 
-    print("\nGL DataFrame:")
-    print(gl_df.head())
+        # Display sample data
+        for name, df in [("SBA", sba_df), ("GL", gl_df)]:
+            print(f"\n{name} DataFrame Preview:")
+            print(f"Shape: {df.shape}")
+            print(f"Columns: {', '.join(df.columns)}")
+            print("\nFirst few rows:")
+            print(df.head())
+
+    except Exception as e:
+        logger.error(f"Error in main execution: {str(e)}")
+        raise
+
 
 if __name__ == "__main__":
     main()
