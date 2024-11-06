@@ -115,8 +115,8 @@ def create_comparison_df(
     # Create hybrid fields for comparison
     for sba_field in sba_fields:
         for gl_desc in gl_desc_fields:
-            sba_comp_df[f"{sba_field}-{gl_desc}"] = sba_df[sba_field]
-            gl_comp_df[f"{sba_field}-{gl_desc}"] = gl_df[gl_desc]
+            sba_comp_df[f"{sba_field}_{gl_desc}"] = sba_df[sba_field]
+            gl_comp_df[f"{sba_field}_{gl_desc}"] = gl_df[gl_desc]
 
     return sba_comp_df, gl_comp_df
 
